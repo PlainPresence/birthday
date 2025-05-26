@@ -19,7 +19,7 @@ function toggleMusic() {
 
 function updateCountdown() {
   const countdown = document.getElementById("countdown");
-  const birthday = new Date("2025-06-15T00:00:00").getTime();
+  const birthday = new Date("2025-06-02T00:00:00").getTime();
   const now = new Date().getTime();
   const days = Math.floor((birthday - now) / (1000 * 60 * 60 * 24));
   countdown.textContent = days < 0 ? "🎉 It's her special day!" : `🎈 ${days} day(s) left!`;
