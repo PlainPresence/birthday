@@ -71,31 +71,34 @@ document.getElementById("submitGuestbook").addEventListener("click", () => {
   }
 });
 
+// 📸 Upload Photo to Firebase Storage and display it
 document.getElementById("uploadPhoto").addEventListener("click", () => {
-  const file = document.getElementById("photoInput").files[0];
-  if (file) {
-    const ref = storage.ref('photos/' + Date.now() + "_" + file.name);
-    ref.put(file).then(() => {
-      ref.getDownloadURL().then(url => {
-        const img = document.createElement("img");
-        img.src = url;
-        document.getElementById("photoGallery").appendChild(img);
-      });
-    });
-  }
-});
+  const fileInput = document.getElementById("photoInput");
+  const file = fileInput.files[0];
 
-function loadPhotos() {
-  const gallery = document.getElementById("photoGallery");
-  storage.ref('photos').listAll().then(result => {
-    result.items.forEach(item => {
-      item.getDownloadURL().then(url => {
-        const img = document.createElement("img");
-        img.src = url;
-        gallery.appendChild(img);
-      });
+  if (!file || !file.type.startsWith("image/")) {
+    alert("Please select a valid image.");
+    return;
+  }
+
+  const fileName = `photos/${Date.now()}_${file.name}`;
+  const storageRef = firebase.storage().ref(fileName);
+
+  storageRef.put(file)
+    .then(snapshot => snapshot.ref.getDownloadURL())
+    .then(url => {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "Uploaded photo";
+      img.style.maxWidth = "100px";
+      img.style.margin = "10px";
+      document.getElementById("photoGallery").appendChild(img);
+    })
+    .catch(error => {
+      console.error("Upload failed:", error);
+      alert("Failed to upload image. Check console for details.");
     });
-  });
+});
 }
 
 // Floating hearts
