@@ -61,6 +61,36 @@ function loadGuestbook() {
   });
 }
 
+// Photo Loading
+function loadPhotos() {
+  const gallery = document.getElementById("photoGallery");
+  if (!gallery) return;
+  gallery.innerHTML = ""; // Clear the gallery
+
+  // List all images in the 'photos/' directory
+  storage.ref('photos').listAll()
+    .then(res => {
+      if (res.items.length === 0) {
+        gallery.innerHTML = "<p>No photos yet.</p>";
+      } else {
+        res.items.forEach(itemRef => {
+          itemRef.getDownloadURL().then(url => {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = "Uploaded photo";
+            img.style.maxWidth = "100px";
+            img.style.margin = "10px";
+            gallery.appendChild(img);
+          });
+        });
+      }
+    })
+    .catch(error => {
+      console.error("Failed to load photos", error);
+      gallery.innerHTML = "<p>Could not load photos.</p>";
+    });
+}
+
 // DOM Ready Main Logic
 document.addEventListener("DOMContentLoaded", () => {
   // Message Form
@@ -97,17 +127,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const fileName = `photos/${Date.now()}_${file.name}`;
-      const storageRef = firebase.storage().ref(fileName);
-
+      const storageRef = storage.ref(fileName);
       storageRef.put(file)
         .then(snapshot => snapshot.ref.getDownloadURL())
         .then(url => {
-          const img = document.createElement("img");
-          img.src = url;
-          img.alt = "Uploaded photo";
-          img.style.maxWidth = "100px";
-          img.style.margin = "10px";
-          document.getElementById("photoGallery").appendChild(img);
+          // Optionally show the uploaded image instantly:
+          // const img = document.createElement("img");
+          // img.src = url;
+          // img.alt = "Uploaded photo";
+          // img.style.maxWidth = "100px";
+          // img.style.margin = "10px";
+          // document.getElementById("photoGallery").appendChild(img);
+
+          loadPhotos(); // Refresh gallery
+          fileInput.value = ""; // Clear the file input
         })
         .catch(error => {
           console.error("Upload failed:", error);
@@ -147,22 +180,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load Data
   loadMessages();
   loadGuestbook();
-
-  // Stub for missing loadPhotos function
-  if (typeof loadPhotos !== "function") {
-    window.loadPhotos = function() {
-      // To be implemented: load previously uploaded photos if needed.
-    };
-  }
   loadPhotos();
 
   // ===== Background Music Autoplay Logic =====
   var music = document.getElementById("bgMusic");
   if (music) {
     // Try to play on load (may fail due to browser policies)
-    music.play().catch(function() {
+    music.play().catch(function () {
       // Wait for user interaction
-      document.body.addEventListener('click', function() {
+      document.body.addEventListener('click', function () {
         music.play();
       }, { once: true });
     });
