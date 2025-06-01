@@ -173,3 +173,13 @@ footer {
     width: 80px;
   }
 }
+
+/* Space between uploaded messages */
+#messageList > div {
+  margin-bottom: 12px;
+}
+
+/* Space between guestbook messages */
+#guestbookList > div {
+  margin-bottom: 12px;
+}
