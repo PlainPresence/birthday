@@ -1,3 +1,4 @@
+// Firebase Initialization
 firebase.initializeApp({
   apiKey: "AIzaSyAkz4PQrN8jYqA4TzAdeosW_jfJO5wjXCA",
   authDomain: "birthday-c1189.firebaseapp.com",
@@ -12,11 +13,13 @@ firebase.initializeApp({
 const db = firebase.database();
 const storage = firebase.storage();
 
+// Music Toggle
 function toggleMusic() {
   const music = document.getElementById('bgMusic');
   music.muted = !music.muted;
 }
 
+// Countdown Update
 function updateCountdown() {
   const countdown = document.getElementById("countdown");
   const birthday = new Date("2025-06-02T00:00:00").getTime();
@@ -27,10 +30,12 @@ function updateCountdown() {
 setInterval(updateCountdown, 1000);
 updateCountdown();
 
+// Popup
 function closePopup() {
   document.getElementById('popupCard').style.display = 'none';
 }
 
+// Message Saving
 function saveMessage(msg) {
   db.ref("messages").push({ text: msg, timestamp: Date.now() });
 }
@@ -38,6 +43,7 @@ function saveGuestbook(msg) {
   db.ref("guestbook").push({ text: msg, timestamp: Date.now() });
 }
 
+// Message Loading
 function loadMessages() {
   const container = document.getElementById("messageList");
   db.ref("messages").on("child_added", snap => {
@@ -55,8 +61,9 @@ function loadGuestbook() {
   });
 }
 
-// Ensure elements exist before adding event listeners
+// DOM Ready Main Logic
 document.addEventListener("DOMContentLoaded", () => {
+  // Message Form
   if (document.getElementById("submitMessage")) {
     document.getElementById("submitMessage").addEventListener("click", () => {
       const msg = document.getElementById("messageInput").value.trim();
@@ -67,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Guestbook Form
   if (document.getElementById("submitGuestbook")) {
     document.getElementById("submitGuestbook").addEventListener("click", () => {
       const msg = document.getElementById("guestbookInput").value.trim();
@@ -77,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 📸 Upload Photo to Firebase Storage and display it
+  // Upload Photo
   if (document.getElementById("uploadPhoto")) {
     document.getElementById("uploadPhoto").addEventListener("click", () => {
       const fileInput = document.getElementById("photoInput");
@@ -108,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Floating hearts
+  // Floating Hearts Animation
   setInterval(() => {
     const heart = document.createElement("div");
     heart.textContent = "💖";
@@ -123,25 +131,41 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => heart.remove(), 4000);
   }, 1000);
 
+  // Floating Hearts CSS
   const style = document.createElement("style");
   style.textContent = `
-  @keyframes floatUp {
-    0% { transform: translateY(0); opacity: 0.7; }
-    100% { transform: translateY(-120vh); opacity: 0; }
-  }`;
+    @keyframes floatUp {
+      0% { transform: translateY(0); opacity: 0.7; }
+      100% { transform: translateY(-120vh); opacity: 0; }
+    }
+  `;
   document.head.appendChild(style);
 
+  // Animation On Scroll (AOS)
   if (window.AOS && AOS.init) AOS.init();
 
+  // Load Data
   loadMessages();
   loadGuestbook();
 
   // Stub for missing loadPhotos function
   if (typeof loadPhotos !== "function") {
     window.loadPhotos = function() {
-      // If you want to load previously uploaded photos, implement here.
-      // For now, this avoids runtime errors.
+      // To be implemented: load previously uploaded photos if needed.
     };
   }
   loadPhotos();
+
+  // ===== Background Music Autoplay Logic =====
+  var music = document.getElementById("bgMusic");
+  if (music) {
+    // Try to play on load (may fail due to browser policies)
+    music.play().catch(function() {
+      // Wait for user interaction
+      document.body.addEventListener('click', function() {
+        music.play();
+      }, { once: true });
+    });
+  }
+  // ===== End Background Music Autoplay =====
 });
