@@ -131,14 +131,6 @@ document.addEventListener("DOMContentLoaded", () => {
       storageRef.put(file)
         .then(snapshot => snapshot.ref.getDownloadURL())
         .then(url => {
-          // Optionally show the uploaded image instantly:
-          // const img = document.createElement("img");
-          // img.src = url;
-          // img.alt = "Uploaded photo";
-          // img.style.maxWidth = "100px";
-          // img.style.margin = "10px";
-          // document.getElementById("photoGallery").appendChild(img);
-
           loadPhotos(); // Refresh gallery
           fileInput.value = ""; // Clear the file input
         })
@@ -194,4 +186,121 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   // ===== End Background Music Autoplay =====
+
+  // ================= Voice Notes Logic ===================
+  const recordBtn = document.getElementById('recordBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const audioPlayback = document.getElementById('audioPlayback');
+  const vnStatus = document.getElementById('vn-status');
+  const vnName = document.getElementById('vnName');
+  const vnList = document.getElementById('vnList');
+
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let currentAudioBlob = null;
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, ch =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])
+    );
+  }
+
+  function addVoiceNoteToList({ name, url }) {
+    const item = document.createElement('div');
+    item.className = "vn-item";
+    item.innerHTML = `<strong>${escapeHtml(name)}:</strong> <audio src="${url}" controls></audio>`;
+    vnList.prepend(item);
+  }
+
+  function loadVoiceNotes() {
+    db.ref('voiceNotes').orderByChild('ts').on('value', snapshot => {
+      vnList.innerHTML = '';
+      const notes = [];
+      snapshot.forEach(child => notes.push(child.val()));
+      notes.reverse().forEach(addVoiceNoteToList);
+    });
+  }
+
+  if (
+    recordBtn && stopBtn && uploadBtn &&
+    audioPlayback && vnStatus && vnName && vnList
+  ) {
+    recordBtn.onclick = async () => {
+      if (!vnName.value.trim()) {
+        vnStatus.textContent = "Please enter your name!";
+        vnName.focus();
+        return;
+      }
+      if (navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.start();
+
+        vnStatus.textContent = "Recording...";
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+        uploadBtn.disabled = true;
+        audioPlayback.style.display = 'none';
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          currentAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          audioPlayback.src = URL.createObjectURL(currentAudioBlob);
+          audioPlayback.style.display = 'block';
+          uploadBtn.disabled = false;
+          vnStatus.textContent = "Ready to upload!";
+        };
+      } else {
+        alert("Audio recording is not supported in this browser.");
+      }
+    };
+
+    stopBtn.onclick = () => {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+        recordBtn.disabled = false;
+        stopBtn.disabled = true;
+        vnStatus.textContent = "Recording stopped.";
+      }
+    };
+
+    uploadBtn.onclick = () => {
+      if (!currentAudioBlob) return;
+      vnStatus.textContent = "Uploading...";
+
+      const name = vnName.value.trim();
+      const fileName = `voice-notes/${Date.now()}_${name.replace(/\s+/g, '_')}.webm`;
+      const storageRef = storage.ref(fileName);
+      const uploadTask = storageRef.put(currentAudioBlob);
+
+      uploadTask.on('state_changed', null,
+        error => {
+          vnStatus.textContent = "Upload failed. Please try again.";
+          console.error(error);
+        },
+        () => {
+          uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+            const noteData = { name, url: downloadURL, ts: Date.now() };
+            db.ref('voiceNotes').push(noteData, err => {
+              if (!err) {
+                vnStatus.textContent = "Voice note uploaded!";
+                addVoiceNoteToList(noteData);
+                audioPlayback.style.display = 'none';
+                uploadBtn.disabled = true;
+                vnName.value = "";
+              } else {
+                vnStatus.textContent = "Failed to save voice note info.";
+              }
+            });
+          });
+        }
+      );
+    };
+
+    // Load all existing voice notes on page load
+    loadVoiceNotes();
+  }
+  // ================= End Voice Notes Logic ===================
 });
