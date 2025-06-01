@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Happy Birthday Miznah!</title>
-
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
   <!-- Animate.css for fallback effects -->
@@ -40,7 +39,29 @@
     <button id="submitMessage">Send Wish</button>
   </section>
 
-   <!-- 📝 Guestbook -->
+  <!-- 🎤 Voice Notes Section -->
+  <section id="voiceNotes" data-aos="fade-up">
+    <h2>🎤 Leave a Voice Wish</h2>
+    <div id="vn-controls">
+      <input type="text" id="vnName" placeholder="Your name..." />
+      <button id="recordBtn">Start Recording</button>
+      <button id="stopBtn" disabled>Stop Recording</button>
+      <audio id="audioPlayback" controls style="display:none;"></audio>
+      <button id="uploadBtn" disabled>Upload Voice Note</button>
+      <span id="vn-status"></span>
+    </div>
+    <h3 style="margin-top:2em;">🎧 Listen to Voice Wishes</h3>
+    <div id="vnList">
+      <!-- Uploaded voice notes will appear here like:
+      <div class="vn-item">
+        <strong>Name:</strong>
+        <audio src="audio-url.webm" controls></audio>
+      </div>
+      -->
+    </div>
+  </section>
+
+  <!-- 📝 Guestbook -->
   <section id="guestbook" data-aos="fade-right">
     <h2>📝 Guestbook</h2>
     <div id="guestbookList"></div>
@@ -52,7 +73,6 @@
   <footer>
     <p>Made by Haider
        Suported by Shareefa khala (AQSA) and Shaista (Muzammal)
-    
     </p>
     <p>2025 Haider Khan. All rights reserved.</p>
   </footer>
